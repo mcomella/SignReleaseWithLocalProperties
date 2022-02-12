@@ -3,6 +3,22 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 
+def loadLocalProperties() {
+    // Android Studio creates a local.properties file in the root directory of the project.
+    // Since this gradle file is in the default app module, we need to look in the parent
+    // directory for the local.properties file.
+    def f = file("../local.properties")
+    def properties = new Properties()
+    if (f.canRead()) {
+        f.newReader().withReader {
+            properties.load(it)
+        }
+    }
+    return properties
+}
+
+def localProperties = loadLocalProperties()
+
 android {
     compileSdk 31
 
@@ -20,6 +36,10 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+
+            if (localProperties.getProperty("autosignReleaseWithDebugKey", "false").toBoolean()) {
+                signingConfig signingConfigs.debug
+            }
         }
     }
     compileOptions {
@@ -46,3 +66,4 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 }
+
